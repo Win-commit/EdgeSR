@@ -39,4 +39,4 @@ python experiments.py --model_type SRFormer --sr_model_path basemodels/basicSR/s
 ```
 
 
-*感谢(BasicSR)[https://github.com/XPixelGroup/BasicSR]， 本文所使用绝大部分模型均在BasicSR框架下运行
+*感谢[BasicSR](https://github.com/XPixelGroup/BasicSR)， 本文所使用绝大部分模型均在BasicSR框架下运行
