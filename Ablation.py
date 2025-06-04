@@ -56,7 +56,6 @@ class HardFusionAblation(EdgeSRFusion):
             sr_region = self.sr_model.super_resolve(temp_input)
             os.remove(temp_input)
             sr_h, sr_w = sr_region.shape[:2]
-            # 直接替换
             sr_result[y1*self.scale:y1*self.scale+sr_h, x1*self.scale:x1*self.scale+sr_w] = sr_region
         edge_sr_time = time.time() - start_time
         if save_path:

@@ -9,7 +9,7 @@ import pandas as pd
 from tqdm import tqdm
 from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import structural_similarity as ssim
-
+import argparse
 # 导入自定义模块
 from sr_fusion import EdgeSRFusion
 
@@ -63,7 +63,7 @@ class SRExperiment:
             
         return psnr_value, ssim_value
     
-    def find_hr_image(self, lr_path, hr_dir="/root/autodl-tmp/Datasets/Urban100/image_SRF_4/HR"):
+    def find_hr_image(self, lr_path, hr_dir):
         """根据低分辨率图像路径找到对应的高分辨率图像"""
         # 提取文件名，不含扩展名
         base_name = os.path.splitext(os.path.basename(lr_path))[0]
@@ -101,7 +101,7 @@ class SRExperiment:
         h, w = lr_img.shape[:2]
         
         # 2. 找到对应的HR图像（真值）
-        hr_path = self.find_hr_image(lr_path)
+        hr_path = self.find_hr_image(lr_path,self.hr_dir)
         hr_img = None
         if hr_path:
             hr_img = cv2.imread(hr_path)
@@ -221,8 +221,9 @@ class SRExperiment:
         return metrics
     
     
-    def run_batch_experiment(self, lr_dir, output_dir, limit=None, visualize=True):
+    def run_batch_experiment(self, lr_dir, output_dir, hr_dir, limit=None, visualize=True):
         """对一批图像进行实验对比"""
+        self.hr_dir = hr_dir
         # 创建输出目录
         os.makedirs(output_dir, exist_ok=True)
         
@@ -366,18 +367,43 @@ class SRExperiment:
         plt.close()
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="超分辨率实验")
+    parser.add_argument("--lr_dir", type=str, default="/root/autodl-tmp/Datasets/Urban100/image_SRF_4/LR", help="低分辨率图像目录", required=True)
+    parser.add_argument("--output_dir", type=str, default="/root/autodl-tmp/output_edge_device_against/Urban100_SRF4@SRFormer", help="输出目录", required=True)
+    parser.add_argument("--limit", type=int, default=None, help="限制处理的图像数量")
+    parser.add_argument("--visualize", type=bool, default=True, help="是否可视化结果")
+    parser.add_argument("--model_type", type=str, default="SRFormer", help="超分模型类型", required=True)
+    parser.add_argument("--scale", type=int, default=4, help="超分倍数", required=True)
+    parser.add_argument("--sr_model_path", type=str, default="/root/EdgeSR/basemodels/basicSR/srformer/SRFormer_SRx4_DF2K.pth", help="超分模型权重路径", required=True)
+    parser.add_argument("--hr_dir", type=str, default="/root/autodl-tmp/Datasets/Urban100/image_SRF_4/HR", help="高分辨率图像目录", required=True)
+    return parser.parse_args()
+
 if __name__ == "__main__":
-    # 创建实验对象
+    args = parse_args()
     experiment = SRExperiment(
-        sr_model_path="/root/EdgeSR/basemodels/basicSR/srformer/SRFormer_SRx4_DF2K.pth",
-        model_type="SRFormer",
-        scale=4
+        sr_model_path=args.sr_model_path,
+        model_type=args.model_type,
+        scale=args.scale
     )
-    
-    # 运行批量实验
     experiment.run_batch_experiment(
-        lr_dir="/root/autodl-tmp/Datasets/Urban100/image_SRF_4/LR",
-        output_dir="/root/autodl-tmp/output_edge_device_against/Urban100_SRF4@SRFormer",
-        limit = None,  
-        visualize=True
+        lr_dir=args.lr_dir,
+        output_dir=args.output_dir,
+        limit=args.limit,
+        visualize=args.visualize
     )
+
+    # # 创建实验对象
+    # experiment = SRExperiment(
+    #     sr_model_path="/root/EdgeSR/basemodels/basicSR/srformer/SRFormer_SRx4_DF2K.pth",
+    #     model_type="SRFormer",
+    #     scale=4
+    # )
+    
+    # # 运行批量实验
+    # experiment.run_batch_experiment(
+    #     lr_dir="/root/autodl-tmp/Datasets/Urban100/image_SRF_4/LR",
+    #     output_dir="/root/autodl-tmp/output_edge_device_against/Urban100_SRF4@SRFormer",
+    #     limit = None,  
+    #     visualize=True
+    # )
